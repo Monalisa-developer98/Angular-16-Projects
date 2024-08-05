@@ -1,0 +1,161 @@
+HTML
+===============================================
+
+<div class="container p-5">
+  <h2 class="text-center mb-5">Top News</h2>
+  <div class="row mb-5">
+    <div class="col-8">
+      <div class="search-bar mb-5 position-relative">
+        <input type="text" class="form-control" placeholder="Search News..." [(ngModel)]="searchQuery" (ngModelChange)="onInputChange()">
+        <button class="btn search-btn" (click)="searchNews()">
+          <img src="../../../assets/images/magnifying-glass.png" alt="">
+        </button>
+        <button class="btn clear-btn" *ngIf="isClearButtonVisible" (click)="clearSearch()">
+          <img src="../../../assets/images/close.png" alt="">
+        </button>
+      </div>
+    </div>
+    <div class="col-4 d-flex gap-2">
+      <input type="date" class="form-control" [(ngModel)]="startDate">
+      <input type="date" class="form-control" [(ngModel)]="endDate">
+    </div>
+  </div>
+
+  <div class="news row">
+    <div class="col-12" *ngIf="filteredNews.length === 0">
+      <p class="text-center">No data found</p>
+    </div>
+    <div class="col-md-12" *ngFor="let news of filteredNews" data-aos="fade-up">
+      <div class="news-item mb d-flex position-relative">
+        <div class="news-left position-relative">
+          <div class="news-ng-box" data-aos="slide-left"></div>
+          <div class="news-img-box" data-aos="slide-right"><img [src]="news.image" alt=""></div>
+        </div>
+        <div class="news-right" data-aos="zoom-in">
+          <p class="news-title">{{ news.title }}</p>
+          <p [innerHTML]="news.content"></p>
+          <p class="date"><span class="date-label">DATE: </span>{{ news.date }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+---------------------------------------- component file ---------------------------------
+
+import { Component, OnInit } from '@angular/core';
+import { LocalNewsService } from '../../services/local-news.service';
+import AOS from 'aos';
+
+@Component({
+  selector: 'app-local-news',
+  templateUrl: './local-news.component.html',
+  styleUrls: ['./local-news.component.css']
+})
+export class LocalNewsComponent implements OnInit {
+  newsResponse: any;
+  searchQuery: string = '';
+  filteredNews: Array<{ date: string, title: string, content: string, image: string }> = [];
+  isClearButtonVisible: boolean = false;
+  startDate: string = '';
+  endDate: string = '';
+
+  constructor(private newsService: LocalNewsService) {}
+
+  ngOnInit(): void {
+    AOS.init({
+      duration: 1000,
+      offset: 200,
+      once: false,
+      mirror: true,
+      disable: 'mobile'
+    });
+    AOS.refresh();
+    window.addEventListener('scroll', AOS.refresh);
+    this.getNews();
+  }
+
+  async getNews() {
+    try {
+      this.newsResponse = await this.newsService.getLocalNews();
+      this.filteredNews = [...this.newsResponse];
+      console.log(this.newsResponse);
+    } catch (error) {
+      console.log('Error' + error);
+    }
+  }
+
+  searchNews(): void {
+    this.filterNews();
+    // this.isClearButtonVisible = this.searchQuery !== '' || this.startDate !== '' || this.endDate !== '';
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.startDate = '';
+    this.endDate = '';
+    this.filteredNews = [...this.newsResponse];
+    this.isClearButtonVisible = false;
+  }
+
+  onInputChange(): void {
+    this.isClearButtonVisible = !!this.searchQuery;
+  }
+
+  filterNews(): void {
+    let filtered = [...this.newsResponse];
+
+    if (this.searchQuery.trim() !== '') {
+      filtered = filtered.filter((news: { title: string; content: string; }) =>
+        news.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        news.content.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    }
+
+    if (this.startDate && this.endDate) {
+      const start = new Date(this.startDate);
+      const end = new Date(this.endDate);
+      filtered = filtered.filter(item => {
+        const itemDate = new Date(item.date);
+        return itemDate >= start && itemDate <= end;
+      });
+    }
+
+    this.filteredNews = filtered;
+  }
+}
+
+
+
+--------------------------------- service-file -------------------------------------
+
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class LocalNewsService {
+
+ private newsApi = 'http://localhost:4600/news';
+  newsData: any;
+
+  constructor(private http: HttpClient) { }
+
+  getLocalNews(){
+    
+    return new Promise((resolve, reject) => {
+      this.http.get(this.newsApi).subscribe(
+        (response: any) => {
+          this.newsData = response.data;
+          resolve(this.newsData);
+        },
+        (error: any) => {
+          reject(error);
+        }
+      );
+    });
+  }
+}

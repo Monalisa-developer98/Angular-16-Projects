@@ -1,0 +1,8 @@
+Angular Reactive Forms
+-----------------------
+https://www.bezkoder.com/angular-16-form-validation/
+https://www.codingame.com/playgrounds/8012/angular-form-validation-example-tutorial
+
+------------------------------------------
+
+// host in ip===> ng s --host 0.0.0.0

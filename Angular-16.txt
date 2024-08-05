@@ -1,0 +1,19 @@
+Angular-16 --- Topics
+------------------------------
+1. Project Setup
+2. Components
+3. Directives (*ngIf, *ngFor)
+4. Routing
+5. Forms
+6. Services
+responsive navigation menu
+swiper slider
+
+-----------------------
+>> pass multiple query params
+
+
+
+
+
+Services are meant to handle data retrieval and manipulation, while components are responsible for presenting data and user interaction.
